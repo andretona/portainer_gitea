@@ -1,0 +1,48 @@
+version: "3"
+
+networks:
+  gitea:
+    external: false
+
+services:
+  server:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=db:3306
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      #use the password chosen for the MySQL user gitea
+      - GITEA__database__PASSWD=MYSQL_PASSWORD
+    restart: always
+    networks:
+      - gitea
+    volumes:
+      #select the gitea data folder 
+      - /gitea/data/folder:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "222:22"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.4.3
+    restart: always
+    environment:
+      #change the password for MySQL user root
+      - MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD
+      - MYSQL_USER=gitea
+      #change the password for MySQL user gitea 
+      - MYSQL_PASSWORD=MYSQL_PASSWORD
+      - MYSQL_DATABASE=gitea
+    networks:
+      - gitea
+    volumes:
+      #select the db data folder
+      - "db/data/folder":/var/lib/mysql
